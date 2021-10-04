@@ -2,8 +2,9 @@
 
 Exam Project about Odissey. Help Ulysses kill the Suitors!
 
-the assets are not included
+assets and music not included
 
 here some screenshot
+
 
 
