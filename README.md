@@ -8,3 +8,8 @@ here some screenshot
 
 
 
+![plot](./1.png)
+
+![plot](./2.png)
+
+![plot](./3.png)
