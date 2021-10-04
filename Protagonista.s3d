@@ -1,0 +1,202 @@
+#include <Script3d.h>
+
+
+class Protagonista
+{
+	var m_cubeP;
+	var o_cubeP;				// mesh e obj per il cubo appoggiato sul piano
+	var pos_cubeP  ;	// posizione iniziale del cubo
+	var matP;
+	var maxrot;
+          
+    Draw();
+    muovidx();
+    muovisx();
+    ruotadx();
+    ruotasx();
+    ruotasu();
+    ruotagiu();
+    ruota(a);
+    avanza();
+    indietreggia();
+    posiziona(pos);
+	posizione();
+	orientazione();
+	direzione();
+	collide(obj);
+	ogg();
+	nelconfine();
+	ricaricaaa();
+};
+
+function Protagonista::Protagonista()
+{
+	m_cubeP = CVMNewMesh("arcol.aam");
+	o_cubeP = CVmObj(m_cubeP);
+	pos_cubeP    = [0.0,20.0,0.0];	// posizione iniziale del cubo
+	o_cubeP.SetPosition(pos_cubeP);
+	o_cubeP.RotateABS(90,0,1,0); //ruota di un grado a sx
+	maxrot=0;
+   
+}
+
+function Protagonista::Draw()
+{
+	o_cubeP.Draw();
+}
+
+
+
+function Protagonista::ruotadx()
+{
+	o_cubeP.RotateABS(-1,0,1,0); //ruota di un grado a dx
+
+}
+function Protagonista::ruotasx()
+{
+	o_cubeP.RotateABS(1,0,1,0); //ruota di un grado a sx
+
+}
+
+function Protagonista::ruota(a)
+{
+	o_cubeP.SetRotation(a,0,1,0); 
+	o_cubeP.Rotate(5,1,0,0); 
+	
+
+}
+
+function Protagonista::ruotasu()
+{
+	if (maxrot <= 40){
+		o_cubeP.Rotate(1,1,0,0); 
+		maxrot+=1;
+	}
+
+}
+function Protagonista::ruotagiu()
+{
+	if (maxrot >= -40){
+	o_cubeP.Rotate(-1,1,0,0);
+		maxrot-=1;
+	}
+}
+
+function Protagonista::muovisx()
+{
+this.nelconfine();
+			o_cubeP.move(-0.9,0,0);
+
+}
+function Protagonista::muovidx()
+{
+this.nelconfine();
+		o_cubeP.move(0.9,0,0);
+
+}
+
+
+function Protagonista::avanza()
+{
+this.nelconfine();
+		o_cubeP.Move(0,0,-0.9);	
+}
+function Protagonista::indietreggia()
+{
+this.nelconfine();
+		o_cubeP.Move(0,0,0.9);		
+
+}
+function Protagonista::posiziona(pos)
+{
+
+	
+	o_cubeP.SetPosition(pos);
+
+}
+function Protagonista::posizione(){
+	return o_cubeP.GetPosition();
+	
+	
+}
+function Protagonista::orientazione(){
+	return o_cubeP.GetRotationMatrix();
+	
+	
+}
+function Protagonista::direzione(){
+	return o_cubeP.GetDirection();
+	
+	
+}
+function Protagonista::collide(obj)
+{
+	return o_cubeP.IsCollidingBBox(obj);
+
+}
+function Protagonista::ogg()
+{
+	return o_cubeP;
+
+}
+function Protagonista::nelconfine()
+{
+	if (o_cubeP.Getposition()[0]<-87)   
+		o_cubeP.Setposition([-87,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);
+	if (o_cubeP.Getposition()[0]>87)
+		o_cubeP.Setposition([87,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);
+		
+	if (o_cubeP.Getposition()[2]>87)
+		o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],87]);
+	if (o_cubeP.Getposition()[2]<-87)
+		o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],-87]);
+		
+	// evita l'intersezione con tavolo e colonne
+	if (o_cubeP.Getposition()[0]>-53 && o_cubeP.Getposition()[0]<-34 ){
+		if (o_cubeP.Getposition()[2]<53 && o_cubeP.Getposition()[2]>51 )
+			o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],53]);
+		else if (o_cubeP.Getposition()[2]>-55 && o_cubeP.Getposition()[2]<-54 )
+			o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],-55]);		
+	} 		
+
+	if (o_cubeP.Getposition()[2]>-55 && o_cubeP.Getposition()[2]<53 ){
+		if (o_cubeP.Getposition()[0]>-54 && o_cubeP.Getposition()[0]<-53 )
+			o_cubeP.Setposition([-54 ,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);
+		else if (o_cubeP.Getposition()[0]>-35 && o_cubeP.Getposition()[0]<-34 )
+			o_cubeP.Setposition([-34,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);		
+	} 	
+	
+	//colonna sx
+	if (o_cubeP.Getposition()[0]>37 && o_cubeP.Getposition()[0]<53 ){
+		if (o_cubeP.Getposition()[2]>36 && o_cubeP.Getposition()[2]<37 )
+			o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],36]);
+		else if (o_cubeP.Getposition()[2]>52 && o_cubeP.Getposition()[2]<53 )
+			o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],53]);		
+	} 		
+
+	if (o_cubeP.Getposition()[2]>40 && o_cubeP.Getposition()[2]<51	){
+		if (o_cubeP.Getposition()[0]>37 && o_cubeP.Getposition()[0]<38 )
+			o_cubeP.Setposition([37 ,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);
+		else if (o_cubeP.Getposition()[0]>52 && o_cubeP.Getposition()[0]<53 )
+			o_cubeP.Setposition([53,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);		
+	} 	
+	//colonna dx 
+	if (o_cubeP.Getposition()[0]>37 && o_cubeP.Getposition()[0]<53 ){
+		if (o_cubeP.Getposition()[2]>-37 && o_cubeP.Getposition()[2]<-36 )
+			o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],-36]);
+		else if (o_cubeP.Getposition()[2]>-53 && o_cubeP.Getposition()[2]<-52 )
+			o_cubeP.Setposition([o_cubeP.Getposition()[0],o_cubeP.Getposition()[1],-53]);		
+	} 		
+
+	if (o_cubeP.Getposition()[2]>-53 && o_cubeP.Getposition()[2]<-36){
+		if (o_cubeP.Getposition()[0]>37 && o_cubeP.Getposition()[0]<38 )
+			o_cubeP.Setposition([37 ,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);
+		else if (o_cubeP.Getposition()[0]>52 && o_cubeP.Getposition()[0]<53 )
+			o_cubeP.Setposition([53,o_cubeP.Getposition()[1],o_cubeP.Getposition()[2]]);
+																	}	
+			
+			
+}
+function Protagonista::ricaricaaa(){
+	maxrot=0;
+}

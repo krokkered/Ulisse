@@ -1,0 +1,119 @@
+#include <Script3d.h>
+class Freccia
+{
+	var m_freccia;
+	var o_freccia;				// mesh e obj per il cubo appoggiato sul piano
+	var pos_freccia  ;	// posizione iniziale del cubo
+	var mat;
+    var dist;
+    var involo;
+    var incoccata;
+          
+    disegna(pos,or);
+    collide(obj);
+    incocca(pos,or);
+    ogg();
+    scocca();
+	vola();
+	collisione();
+};
+
+function Freccia::Freccia()
+{
+	dist=0;
+	m_freccia = CVMNewMesh("freccia2.aam");
+		m_freccia.CenterBoundingBox();
+	
+	o_freccia = CVmObj(m_freccia);
+//	pos_freccia    = [140.0,832.0,540.0];	// posizione iniziale del cubo
+	//o_freccia.SetPosition(pos_freccia);
+		o_freccia.SetRotation(-90,1,0,0);
+	
+//	mat = CVmMaterial();
+//	mat.ambient   = [0.4, 0.2, 0.7, 1.0];
+//	mat.diffuse   = [0.0, 0.5, 0.0, 1.0];
+//	mat.specular  = [0.1, 0.1, 0.1, 1.0];
+//	mat.shininess = 2;
+//		m_freccia.ForceMaterial(mat);
+	
+	involo=false;
+	incoccata=false;
+	o_freccia.Hide();	
+	
+	//o_freccia.Move(0.0,0.1,0)	;
+	
+	 
+}
+
+function Freccia::disegna(pos,or)
+{
+		if (involo)	{
+			this.vola();
+			this.incoccata=false;
+			o_freccia.Draw();
+			
+		}
+		if (incoccata){	
+			this.incocca(pos,or);
+			o_freccia.Draw();
+			
+	}
+}
+
+
+// rotdir ==  1 --> rotation clockwise
+// rotdir == -1 --> rotation counterclockwise
+function Freccia::collide(obj)
+{
+
+	if (this.involo) 
+		return o_freccia.IsCollidingBBox(obj);
+	else
+		return false;
+}
+
+function Freccia::incocca(pos,or)
+{
+			this.incoccata= true;
+			o_freccia.Unhide();	
+			o_freccia.SetPosition(pos);
+			o_freccia.SetRotationMatrix(or);
+			o_freccia.Rotate(-90,1,0,0);
+//			o_freccia.Move([0.0, 0.5, 0.5]);
+			o_freccia.Move([0.07, 2.7, 0.0]);
+			
+			//involo=true;
+			dist=0;
+			}
+			
+function Freccia::vola(){
+		if (dist<1000){
+		
+			//ConsoleText(0.01,0.94,"la freccia dall'alto scocca");
+				o_freccia.Unhide();	
+		    o_freccia.Move(0.0,2,0)	;
+		    dist+=0.1;
+	 }
+	 else 
+	 	//o_freccia.Hide();
+	 	
+	 	involo=false;
+
+}			
+			
+			
+function Freccia::scocca(){
+
+	 	involo=true;
+
+}		
+
+function Freccia::ogg(){
+
+return o_freccia;
+}		
+
+function Freccia::collisione(){
+// per evitare che continui dopo aver colpito un oggetto
+involo=false;
+}										

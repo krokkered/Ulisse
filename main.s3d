@@ -1,0 +1,1114 @@
+
+
+#define _S3D_ALLOW_OBSOLETE_FUNCTIONS
+
+#define NFRECCE	30
+ 
+
+
+#include <Script3d.h>
+#include <GLConst.h>
+#include <Impulse.h>
+#include <VirtualKey.h>
+#include <Protagonista.s3d>
+
+#include <freccia.s3d>
+
+
+// Declare extern function (if your editor is not updated)
+
+extern function NewShader; 
+extern function glActiveTextureARB;
+extern function glLightf;
+extern function glShadeModel;
+extern function glBindTexture;
+
+
+
+//camera
+var step = 0;
+var RotX= 0, RotY=0; 
+var CamDir = [1,0,0];	    
+var CamPos = [7,5.0,30.0];  
+
+
+var tempomorto=0;
+//Light
+var Luce,Luce2,Luce3,Luce4;
+
+var PosL = [0,20.0,50.0];	
+
+// Scena
+var meshL,meshText;
+var meshRoom,meshG,meshT,m_braciere,mat;
+var b_testo,o_testo;
+var b_sfondo, o_sfondo;
+var objRoom,objG;
+var objL,objText,objF,objF2,objF3,objF4,fiammetta,meshF;
+var o_braciere;
+var m_vaso, m_vaso1, o_vaso, o_vaso1;
+
+// shader fiammma
+var shader8;
+var myTexture1;
+var myTexture2;
+var myTexture3;
+var time = 0.0;
+var time2 = 0.0;
+var tex;
+var texNoise;
+var time3 = 0.0;
+var flame1,flame2,flame3;
+var time4 = 0.0;
+
+// frecce
+var m_freccia, o_freccia;
+var faretra;	
+var contafrecce;		
+var frec=Freccia();
+
+
+//var numFrame = 0;
+//var nFrame = 0;
+
+
+//var modeAnim = false;
+
+//var timeAppear = 0.0;
+var prot= Protagonista();
+	
+var testo,testovittoria,testosconfitta;
+
+var	spazioprem=false;
+
+var spazioril= false;
+var trigger_cube_f = false;
+var partenza =false;
+var vasorotto=false;
+
+var uc4=false;
+var uc5 =false;
+var uc6 =false;
+var uc7 =false;
+
+var accesoF=true;
+var accesoF2=true;
+var accesoF3=true;
+var accesoF4=true;
+var disabilitatasti=true;
+
+
+var m_proc,m_proc2,m_procs, o_proc,o_proc2,o_proc3,o_proc4,o_proc5;
+var nframes=25;
+var nframesv=62;
+var distanzad;
+
+//suoni
+var s_freccia,s_rantolo,s_spada,s_vaso,suono;
+var odfight,odfin,odintro,odmort;
+
+
+var buffo;
+var buffot;
+
+var listauccisi;
+var prociuccisi=0;
+var angolorot;
+//var angolorotp=0;
+
+//function to declare 
+function MoveMouse();
+function CameraP(pos,or);
+function KeyBoardManager();
+function distanza(a,b);
+function fiamma(objff);
+function procCammina(a,frame_number,frame_numbers);
+function partitapersa();
+function procEvitaOstacoli(a,an);
+function ricarica();
+function ombre();
+function OnDownload()
+{
+	FileDownload("data.zip");	
+}
+
+function OnInit(params)
+{
+	b_testo = CVmBillboard("testo.png");
+	o_testo = CVmObj();
+	o_testo.LinkToBillboard(b_testo);	
+	o_testo.SetPosition([0,-1,-0.2]);	
+	o_testo.SetRotation(-65, 1,0,0);
+
+	b_sfondo = CVmBillboard("sfondo.jpg");
+	o_sfondo = CVmObj();
+	o_sfondo.LinkToBillboard(b_sfondo);	
+	o_sfondo.SetPosition([0,0,-2]);	
+
+
+	glEnable(GL_NORMALIZE);
+
+
+	shader8  = NewShader("flame.sh");
+	
+	m_proc = CVMNewMesh("omettoseduto.aam");
+	m_proc.Scale(0.4,0.4,0.4);
+	m_procs = CVMNewMesh("omettoseduto.aam");
+	m_procs.Scale(0.4,0.4,0.4);
+	m_procs.Mirror(0);	        
+	
+	m_proc2 = CVMNewMesh("omettoalzato.aam");
+	m_proc2.Scale(0.4,0.4,0.4);
+    m_proc2.Mirror(0);
+    
+	o_proc = CVmObj(m_proc);
+	o_proc.Rotate(90,0,1,0);
+	         o_proc.SetPosition([-66.0,0.0,-24.0]);
+	         
+
+	  
+	o_proc2 = CVmObj(m_proc);
+	o_proc2.Rotate(90,0,1,0);
+	         o_proc2.SetPosition([-66.0,0.0,24.0]);
+	       
+	o_proc3 = CVmObj(m_procs);	
+	o_proc3.Rotate(90,0,1,0);
+			o_proc3.SetPosition([-66.0,0.0,0.0]);
+	
+	o_proc4 = CVmObj(m_proc2);
+	        o_proc4.SetPosition([0,0,90]);	
+	         
+	o_proc5 = CVmObj(m_proc2);
+	        o_proc5.SetPosition([0,0,-90]);	
+	
+
+    contafrecce=0;
+    
+
+	m_vaso1 = CVMNewMesh("vasus.aam"); 
+	    m_vaso1.Scale(0.3,0.3,0.3);
+	
+	o_vaso1 = CVmObj(m_vaso1);	
+        o_vaso1.SetPosition([27,0,-85]);
+
+    flame1     = LoadTexture("fire_base.png");
+    flame2     = LoadTexture("fire_distortion.png");
+    flame3     = LoadTexture("fiammetta2.png");
+
+	//Camera
+	//SetCameraPosition(CamPos2);
+
+	//Light
+	Luce = NewLight();
+	Luce.SetDiffuse(0.3,0.3,0.3);
+	Luce.SetAmbient(0.3,0.3,0.3);
+	Luce.SetSpecular(0.0, 0.0, 0.0);
+	Luce.Enable();
+	Luce.Setposition(86,27.5,86);	
+
+	Luce2 = NewLight();
+	Luce2.SetDiffuse(0.3,0.3,0.3);
+	Luce2.SetAmbient(0.3,0.3,0.3);
+	Luce2.SetSpecular(0.0, 0.0, 0.0);
+	Luce2.Enable();	
+	Luce.Setposition(-86,27.5,86);
+	
+	Luce3 = NewLight();
+	Luce3.SetDiffuse(0.3,0.3,0.3);
+	Luce3.SetAmbient(0.3,0.3,0.3);
+	Luce3.SetSpecular(0.0, 0.0, 0.0);
+	Luce3.Enable();
+	Luce.Setposition(86,27.5,-86);
+	
+	Luce4 = NewLight();
+	Luce4.SetDiffuse(0.3,0.3,0.3);
+	Luce4.SetAmbient(0.3,0.3,0.3);
+	Luce4.SetSpecular(0.0, 0.0, 0.0);
+	Luce4.Enable();	
+	Luce.Setposition(-86,27.5,-86);
+
+    
+
+    
+    m_braciere = CVMNewMesh("braciere.aam");
+   		 m_braciere.Scale(15,15,15);
+   	o_braciere = CVmObj(m_braciere);
+    
+    
+    mat = CVmMaterial();	
+	mat.ambient   = [0.0, 0.0, 0.0, 1.0];
+	mat.diffuse   = [0.0, 0.00, 0.0, 1.0];
+	mat.specular  = [0.0, 0.0, 0.0, 1.0];
+	mat.shininess = 7;    
+
+	
+	m_braciere.ForceMaterial(mat);
+    m_braciere.CenterBoundingBox();
+
+    
+    // Load billboard for the light
+   fiammetta = CVmBillboard("fiammetta2.png",2,2,0,29,0);
+   meshF = CVmNewMesh(VRP_PYRAMID);
+   meshF.Scale(5,9,5);
+   meshF.CenterBoundingBox();
+   objF = CVmObj(meshF);
+   objF4 = CVmObj(meshF);
+   objF2 = CVmObj(meshF);
+   objF3 = CVmObj(meshF);
+
+    
+    //Load billboard for text10
+ //   meshText = LoadNewMesh("text.AAM");
+  //  objText  = NewObject();
+ //   objText.LinkToMesh(meshText);
+    
+    // Load the room
+    meshRoom = LoadNewMesh("beppesala.AAM");
+    meshRoom.Scale(15,15,15);
+    
+    objRoom = NewObject();
+    objRoom.LinkToMesh(meshRoom);
+    
+    // Load camera animation
+
+    
+    
+listauccisi = Array(8);
+for(var i = 0; i < len(listauccisi); i++) listauccisi[i]= 0;
+
+    
+faretra = Array(NFRECCE);
+
+for(var i = 0; i < len(faretra); i++) faretra[i]= Freccia();
+		
+   
+    //setfadevalue(0);
+    
+ // suoni 
+ 
+ s_freccia= CVmVRAWav();
+ s_freccia.Load("freccia.wav");    
+    
+ s_spada= CVmVRAWav();
+ s_spada.Load("spada.wav");
+ 
+ s_rantolo= CVmVRAWav();
+ s_rantolo.Load("rantolo.wav");
+ 
+  s_vaso= CVmVRAWav();
+  s_vaso.Load("vaso.wav");
+ 
+  odintro= CVmVRAWav();
+  odintro.Load("odintro.wav");
+ 
+  odfight= CVmVRAWav();
+  odfight.Load("odfight.wav");
+
+  odfin= CVmVRAWav();
+  odfin.Load("odfin.wav");
+ 
+  odmort= CVmVRAWav();
+  odmort.Load("odmort.wav");
+  
+  ConsoleFont("Times New Roman", 20);
+
+ // buffo=CVmFbo(VR_FBO_SHADOW,512);
+    
+  //buffot=buffo.GetTexture();
+}
+
+function OnFrame()
+{
+	
+	
+	static var frame_number = 0;  //animazione camminata
+   	static var frame_number2 = 10; 
+   	
+   	static var frame_numbers = 25; //animazione spada
+   	static var frame_numbers2 = 25; 
+
+    static var frame_numberv = 1; 
+    distanzad=distanza(o_proc4,prot);
+    // To fade screen
+//    if (GetTime()-TimeAppear>10)
+//    {
+//    static a = 0.0;
+//    setfadevalue(a);
+//    a+=0.003;
+//    TimeAppear = GetTime();
+//    }
+
+   	//	MoveMouse();
+    	KeyboardManager();						// pressioni dei tasti  
+	
+	if (!partenza){
+		
+		odintro.Play(false);
+			
+		SceneBegin();
+		 
+		 	LoadBackground("sfondo.jpg", VR_NO_FILTER );
+		   
+		   	if (prociuccisi==0){	
+		   	 	if (o_testo.GetPosition()[2] >-3.6)
+					o_testo.Draw();
+		   		if (o_testo.GetPosition()[2] <-2.35){
+					ConsoleText(0.05,0.12,"Usa WASD per orientare l'arco, le FRECCE per spostarti \n SPAZIO per scoccare la freccia. INVIO per iniziare!");
+					
+					}
+				o_testo.Move(0,0.0009,0,0);
+								}
+			
+			
+		    objRoom.Draw();
+		    objRoom.Hide();
+		
+		SceneEnd();
+
+					}
+
+
+	if (partenza){
+      	
+    	SetFrameRate (70 );
+	
+
+   	//	if (trigger_cube_f)
+   		//	MoveMouse();
+   	//	else
+ 	   		CameraP(prot.posizione(), prot.orientazione());
+ 	   		
+  	   odintro.Stop();
+       odfight.Play(true);
+      	
+    // Disegna la scena
+    	glClear();
+   	 	SceneBegin();
+ 		objRoom.UnHide();
+   		LoadBackground("immin.png", VR_NO_FILTER );
+   		objRoom.Draw();
+    
+    	o_proc.Draw();
+		o_proc3.Draw();
+		o_proc2.Draw();
+
+
+		prot.posiziona([prot.posizione()[0],20,prot.posizione()[2]]); //per evitare che ascenda oltre il soffitto o sottoterra
+		prot.Draw();
+	
+
+	if (prociuccisi==3){
+		procCammina(o_proc4,frame_number,frame_numbers);
+	    uc4=true;
+						}
+  
+ 	if (prociuccisi==4){
+		procCammina(o_proc5,frame_number2,frame_numbers2);
+		uc5=true;
+						} 
+  
+   	if (prociuccisi==5 || prociuccisi==6){
+		procCammina(o_proc5,frame_number2,frame_numbers2);
+		procCammina(o_proc4,frame_number,frame_numbers);
+		uc6=true;
+		uc7=true;
+  										} 
+  
+  
+  
+	o_vaso1.Draw(VR_FRAMENUMBER,frame_numberv);
+    
+	//disegna i 4 tripodi agli angoli  con il fuoco sopra  
+    o_braciere.SetPosition(86,13,86);
+    o_braciere.Draw();
+
+    if (accesoF){
+    	fiamma(objF);  
+    	Luce.Setposition([86,27.5,86]);
+				}
+
+    o_braciere.SetPosition(-86,13,86);
+    o_braciere.Draw();
+    
+    if (accesoF2){
+    	fiamma(objF2);  
+   		 }
+        
+    o_braciere.SetPosition(86,13,-86);
+    o_braciere.Draw();
+    
+       if (accesoF3){
+    
+    fiamma(objF3);
+					}
+					
+					
+    o_braciere.SetPosition(-86,13,-86);
+    o_braciere.Draw(); 
+    if (accesoF4){
+    
+    fiamma(objF4);
+    
+    }
+
+	if (!(accesoF || accesoF2 || accesoF3 || accesoF4)){
+		//ConsoleText(0.05,0.70,"hai spento tutto");
+		Luce.Enable();
+	    Luce.Setposition([0,23,-86]);		
+		Luce.SetDiffuse(0.1,0.1,0.1);
+		Luce.SetAmbient(0.1,0.1,0.1);
+		
+	}
+     
+	for(var i = 0; i < len(faretra); i++) faretra[i].disegna(prot.posizione(),prot.orientazione());
+	
+		SceneEnd();
+	
+	}
+	
+	
+	if (distanza(o_proc4,prot) < 23){
+		if (frame_numbers <40){
+			frame_numbers +=1;}
+		if (uc4 )	{
+			if ( prociuccisi== 3){
+
+				if (tempomorto==0){
+						tempomorto=GetTime();
+						disabilitatasti=true;	
+						prot.ruota(angolorot+90);
+						SetFrameRate (15 );
+				  
+		
+									}
+				if (GetTime()-tempomorto>2500)
+				partitapersa();
+								}
+			else if ( uc6 ){
+				if (tempomorto==0){
+						tempomorto=GetTime();						
+						disabilitatasti=true;
+						prot.ruota(angolorot+90);
+						SetFrameRate (15 );
+							
+								}
+				if (GetTime()-tempomorto>2500)
+					partitapersa();
+			
+						}
+					}
+						}
+	else{
+			frame_numbers=23;
+		}						
+
+	if (distanza(o_proc5,prot) < 25){
+		if (frame_numbers2 <40)
+			frame_numbers2 +=1;
+		if (uc5 ){	
+				if (tempomorto==0){
+					tempomorto=GetTime();
+					disabilitatasti=true;	
+					prot.ruota(angolorot+90);
+					SetFrameRate (15 );		
+								}
+				if (GetTime()-tempomorto>2500)
+				partitapersa();
+			}
+									}
+	else{
+			frame_numbers2=25;
+	}
+	frame_number = (frame_number + 1) % nframes;
+	frame_number2 = (frame_number2 + 1) % nframes;
+	
+
+	for(var i = 0; i < len(faretra); i++){
+	if (faretra[i].collide(o_proc) ) {
+					
+			if (listauccisi[0]==0){
+				faretra[i].collisione();
+				listauccisi[0]=1;
+				s_rantolo.Play(false);
+				o_proc.SetPosition(200,200,200);
+				o_proc.Hide();
+				prociuccisi+=1;
+									}
+	
+										}
+	if (faretra[i].collide(o_proc2) ) {		
+					
+			if (listauccisi[1]==0){
+				faretra[i].collisione();
+				listauccisi[1]=1	;		
+				s_rantolo.Play(false);
+				o_proc2.SetPosition(200,200,200);
+				o_proc2.Hide();			
+				prociuccisi+=1;
+									}
+		
+	}
+	
+	
+	if (faretra[i].collide(o_proc3) ) {	
+			
+			if (listauccisi[2]==0){
+				faretra[i].collisione();
+				listauccisi[2]=1	;
+				s_rantolo.Play(false);
+				o_proc3.SetPosition(200,200,200);
+				o_proc3.Hide();		
+				prociuccisi+=1;
+								}
+									}
+
+	if (faretra[i].collide(o_vaso1) ) {	
+		faretra[i].collisione();		
+		if (vasorotto==false){
+			//ConsoleText(0.01,0.86,"vaso collido");
+			vasorotto= true;
+			s_vaso.Play(false);
+							}
+										}	
+	
+	if (faretra[i].collide(objF) ) {	
+		faretra[i].collisione();		
+		accesoF=false;
+		Luce.Disable();
+			
+	}		
+
+	if (faretra[i].collide(objF2) ) {	
+		faretra[i].collisione();		
+		accesoF2=false;
+		Luce2.Disable();
+	}		
+	
+	if (faretra[i].collide(objF3) ) {	
+		faretra[i].collisione();		
+		accesoF3=false;
+		Luce3.Disable();
+	}		
+	
+	if (faretra[i].collide(objF4) ) {	
+		faretra[i].collisione();		
+		accesoF4=false;
+		Luce4.Disable();
+	}				
+
+	if (faretra[i].collide(o_proc4) ){
+		if (uc4){
+			faretra[i].collisione();
+			if (listauccisi[3]==0){
+			//	ConsoleText(0.01,0.86,"ne hai ucciso 1 camminante");
+				listauccisi[3]=1	;
+				s_rantolo.Play(false);
+				o_proc4.SetPosition(200,200,200);
+				o_proc4.Hide();		
+				prociuccisi+=1;
+				o_proc4.SetPosition([0,0,94]);	
+			
+		}
+		
+			if (uc6){
+				faretra[i].collisione();
+				if (listauccisi[5]==0){
+			//	ConsoleText(0.01,0.86,"ne hai ucciso 3 camminante");
+					listauccisi[5]=1	;
+					s_rantolo.Play(false);
+					o_proc4.SetPosition(200,200,200);
+					o_proc4.Hide();		
+					prociuccisi+=1;
+			
+									}	
+			
+					}
+		
+		
+		}
+		
+	}	
+	if (faretra[i].collide(o_proc5 )){
+		if (uc5){
+			faretra[i].collisione();
+			if (listauccisi[4]==0){
+			//	ConsoleText(0.01,0.86,"ne hai ucciso il secondo camminante");
+				listauccisi[4]=1	;
+				s_rantolo.Play(false);
+				o_proc5.SetPosition(200,200,200);
+				o_proc5.Hide();		
+				prociuccisi+=1;
+				o_proc5.SetPosition([0,0,-94]);	
+			
+		}
+		
+			if (uc7){
+				faretra[i].collisione();
+				if (listauccisi[6]==0){
+			//	ConsoleText(0.01,0.86,"ne hai ucciso 4 camminante");
+					listauccisi[6]=1	;
+					s_rantolo.Play(false);
+					o_proc5.SetPosition(200,200,200);
+					o_proc5.Hide();		
+					prociuccisi+=1;
+									}				
+					}
+				}
+									}		
+
+}
+
+
+
+
+if (vasorotto== true){
+	//ConsoleText(0.01,0.86,"vaso è rotto");
+	if (frame_numberv <62)
+		frame_numberv +=1;
+					}
+else{
+	frame_numberv =1;
+	}
+
+if (prociuccisi==7){
+	partenza= false;
+	if (odintro.Isplaying())
+		odintro.Stop();
+	if (odfight.Isplaying())
+		odfight.Stop();
+	odfin.Play(true);		
+	ConsoleText(0.1,0.5,"Hai vinto!!! La vendetta di Ulisse è ora compiuta!");
+	ConsoleText(0.1,0.22,"Vuoi ricominciare da capo? Premi INVIO");
+	
+}
+
+}
+
+function DownloadReady( RequestID )
+{
+	//TO DO
+}
+
+
+
+function OnTimer()
+{
+	//TO DO
+}
+
+
+
+function OnExit()
+{
+	//TO DO
+}
+
+
+
+// function to move the camera with mouse
+//function MoveMouse()
+//{
+//	static var InMouseR = false, InMouseL = false;				
+//	static var PrecX = 0, PrecY = 0;			
+//	var oldPos[3];
+//	oldPos = CamPos;
+//	
+//	if(Mouse.ButtonL)
+//  	{
+//  		if( InMouseL )
+//   		{
+//		    Rotx += (Mouse.X - PrecX)/50.0;
+//		    Roty += (Mouse.Y - PrecY)/50.0;
+//		    SetCameraRotation(Roty, 1,0,0 );
+//		    CameraRotate(Rotx , 0,1,0 );
+//		   }
+//	  	else
+//   		{
+//	   		PrecX = Mouse.X;
+//   			PrecY = Mouse.Y;
+//   		}
+// 	 	InMouseL = true;
+//  	}
+// 	else
+//  		InMouseL = false;
+//
+// 	if(Mouse.ButtonR)
+//  	{
+//  		if( InMouseR )
+//   		{
+//   			CamPos = GetCameraPosition();
+//   			CamDir = GetCameraDirection();
+//   			step = ( PrecY - Mouse.Y) /150.0; 
+//			CamPos[0] += step*CamDir[0];
+//			CamPos[1] += step*CamDir[1];
+//			CamPos[2] += step*CamDir[2];
+//   			
+//   			// Limit Camera
+//   			if (CamPos[1]<2.0) CamPos[1] = oldPos[1];
+//   			if (CamPos[1]>55.0) CamPos[1] = oldPos[1];
+//   			if (CamPos[0]>70 || CamPos[0]<-79) CamPos[0] = oldPos[0];
+//   			if (CamPos[2]>75 || CamPos[2]<-70) CamPos[2] = oldPos[2];
+//   			
+//   			SetCameraPosition( CamPos );
+//    		}
+//  		else
+//   		{
+//			PrecX = Mouse.X;
+//			PrecY = Mouse.Y;
+//   		}
+//		InMouseR = true;
+//  	}
+//	else
+//		InMouseR = false;
+//
+//}
+
+
+function KeyboardManager()
+{
+	if (!disabilitatasti){
+	if(keypressed(VK_RIGHT, true)) {
+				prot.muovidx();
+									}	
+	
+	if(keypressed(VK_LEFT, true)) {
+        				prot.muovisx();
+									}		
+	
+
+		
+	if(keypressed(VK_UP, true)) {
+		prot.avanza();
+								}	
+	
+	if(keypressed(VK_DOWN, true)) {
+		prot.indietreggia();
+									}	
+
+	if(keypressed("A", true)) {
+		prot.ruotasx();
+								}	
+	
+	if(keypressed("D", true)) {
+		prot.ruotadx();
+							}	
+
+	if(keypressed("w", true)) {
+		prot.ruotasu();		
+								}	
+	
+	if(keypressed("t", true)) {
+		partenza=false;
+							}	
+	
+	if(keypressed("s", true)) {
+		prot.ruotagiu();
+							}		
+
+
+	if(keypressed("c", true)) {
+		trigger_cube_f=!trigger_cube_f;	
+							}
+							
+	if(keypressed(VK_SPACE, true)) {
+			faretra[contafrecce].incocca(prot.posizione(),prot.orientazione());
+			spazioprem= true;
+									}				
+
+		if(!keypressed(VK_SPACE, true)) { 	
+		if (spazioprem){
+			s_freccia.Play(false);
+			//ConsoleText(0.01,0.90,"spazio rilasciato");
+			faretra[contafrecce].scocca();
+			spazioprem=false;
+			if (contafrecce< NFRECCE-1){
+				contafrecce +=1;
+			}
+			else contafrecce=0;
+			
+					}	
+										}
+
+
+}
+		if(keypressed(VK_RETURN, true)) {
+			if (listauccisi[0]==0){ 
+				partenza= true;
+				disabilitatasti=false;
+									}
+				
+			if (listauccisi[7]==1 || listauccisi[6]==1)	
+				ricarica();				
+	}	
+}
+
+function CameraP(pos,or){
+	CameraSetMatrix  (  MatrixInverse_4  ( or  )  ) ;	// bisogna invertire altrimenti va al contrario
+	SetCameraPosition(pos+[0.0,0.2,0.0]);	// un po' dall'alto
+						}
+
+
+function distanza(a,b){
+	var distanza,xa,xb,ya,yb;
+	xa=a.GetPosition()[0];
+	xb= b.posizione()[0];
+	ya=a.GetPosition()[2];
+	yb=b.posizione()[2];
+	distanza = sqrt((xa-xb)^2+(ya-yb)^2);
+	return distanza;
+}
+
+
+function fiamma(objff){
+	
+	objff.SetPosition(o_braciere.GetPosition()+[0,17,0]);
+   	objff.Draw();
+   	objff.Hide();
+	
+	shader8.Start();
+    
+    // Active blending
+    glEnable(GL_BLEND);
+    glBlendFunc(1,770);
+    
+    // Active texture on different texture unit
+	SetActiveTexture(flame1,VR_NO_FILTER,0);
+	SetActiveTexture(flame2,VR_NO_FILTER,1);
+	SetActiveTexture(flame3,VR_NO_FILTER,2);
+	
+	
+	shader8.SetParameter("timer0", time4);
+    shader8.SetParameter("layer_speed", 0.6, 0.5, 0.7, 1.0);
+	shader8.SetParameter("distortion_amount2", -0.02);
+	shader8.SetParameter("distortion_amount1", 0.02);
+	shader8.SetParameter("distortion_amount0", 0.12);
+	shader8.SetParameter("height_attenuation", 0.44, 0.29, 0.0, 1.0);
+	shader8.SetParameter("fire_distortion", 1);
+	shader8.SetParameter("fire_opacity", 2);
+	shader8.SetParameter("fire_base",0);
+	
+
+	
+	time4+=0.03;
+    
+	fiammetta.SetPosition(o_braciere.GetPosition()+[0,14.5,0]);
+    fiammetta.Draw();
+    
+
+    
+    shader8.Stop();
+    glDisable(GL_BLEND);
+    glActiveTextureARB(1);
+	glDisable(GL_TEXTURE_2D);
+	glActiveTextureARB(2);
+	glDisable(GL_TEXTURE_2D);
+	glActiveTextureARB(0);     
+	
+}
+
+function procCammina(a,frame_number,frame_numbers){
+
+        a.UnHide();
+       	angolorot = atan2(prot.posizione()[0] - a.GetPosition()[0],prot.posizione()[2]-a.GetPosition()[2]);
+    	angolorot = (angolorot*360/6.18)-90;
+    		   //ConsoleText(0.01,0.78,"angolorot"+str(angolorot));
+    	
+    	
+    	if (distanza(a,prot)>20){
+    		procEvitaOstacoli(a,angolorot);
+    		a.Move(0.15,0,0);
+   	        a.Draw(VR_FRAMENUMBER, frame_number);
+    		
+    							}
+    	else 	
+           a.Draw(VR_FRAMENUMBER, frame_numbers);
+
+}
+
+
+function procEvitaOstacoli(a,an){
+
+	// evita l'intersezione con tavolo e colonne
+	if (a.Getposition()[0]>-54 && a.Getposition()[0]<-34 ){
+		if (a.Getposition()[2]<54 && a.Getposition()[2]>53 ){
+			if (prot.posizione()[0]>-44)
+				a.Setposition([a.Getposition()[0]+0.3,a.Getposition()[1],54]);
+			else
+				a.Setposition([a.Getposition()[0]-0.3,a.Getposition()[1],54]);
+
+			
+			}
+		else if (a.Getposition()[2]>-55 && a.Getposition()[2]<-54 ){
+			if (prot.posizione()[0]>-44)
+					a.Setposition([a.Getposition()[0]+0.3,a.Getposition()[1],-55]);	
+			else
+					a.Setposition([a.Getposition()[0]-0.3,a.Getposition()[1],-55]);	
+						
+			}	
+	} 		
+
+	if (a.Getposition()[2]>-54 && a.Getposition()[2]<53 ){
+		if (a.Getposition()[0]>-54 && a.Getposition()[0]<-53 ){
+			if (prot.posizione()[2]>0)
+			a.Setposition([-54 ,a.Getposition()[1],a.Getposition()[2]+0.3]);
+			else 
+			a.Setposition([-54 ,a.Getposition()[1],a.Getposition()[2]-0.3]);
+			
+			
+			
+			}
+		else if (a.Getposition()[0]>-35 && a.Getposition()[0]<-34 ){
+			if (prot.posizione()[2]>0)
+				a.Setposition([-34,a.Getposition()[1],a.Getposition()[2]+0.3]);	
+			else
+				a.Setposition([-34,a.Getposition()[1],a.Getposition()[2]-0.3]);	
+				
+			
+				
+			
+			}
+	} 	
+	
+	//colonna sx
+	if (a.Getposition()[0]>37 && a.Getposition()[0]<53 ){
+		if (a.Getposition()[2]>36 && a.Getposition()[2]<37 ){
+			if (prot.posizione()[0]>45)
+				a.Setposition([a.Getposition()[0]+0.3,a.Getposition()[1],36]);
+			else
+				a.Setposition([a.Getposition()[0]-0.3,a.Getposition()[1],36]);
+			
+			
+			}
+			
+			
+		else if (a.Getposition()[2]>52 && a.Getposition()[2]<53 ){
+			if (prot.posizione()[0]>45)
+				a.Setposition([a.Getposition()[0]+0.3,a.Getposition()[1],53]);
+			else
+				a.Setposition([a.Getposition()[0]-0.3,a.Getposition()[1],53]);	
+					
+			}
+	} 		
+
+	if (a.Getposition()[2]>36 && a.Getposition()[2]<53){
+		if (a.Getposition()[0]>37 && a.Getposition()[0]<38 ){
+			if (prot.posizione()[2]<45)
+				a.Setposition([37 ,a.Getposition()[1],a.Getposition()[2]-0.3]);
+			else
+				a.Setposition([37 ,a.Getposition()[1],a.Getposition()[2]+0.3]);
+			
+			
+			}
+		else if (a.Getposition()[0]>52 && a.Getposition()[0]<53 ){
+			if (prot.posizione()[2]>45)
+				a.Setposition([53 ,a.Getposition()[1],a.Getposition()[2]+0.3]);
+			else
+				a.Setposition([53 ,a.Getposition()[1],a.Getposition()[2]-0.3]);	
+			
+			}
+	} 	
+	//colonna dx 
+	if (a.Getposition()[0]>37 && a.Getposition()[0]<53 ){
+		if (a.Getposition()[2]>-37 && a.Getposition()[2]<-36 ){
+			if (prot.posizione()[0]>45)
+				a.Setposition([a.Getposition()[0]+0.3,a.Getposition()[1],-36]);
+			else
+				a.Setposition([a.Getposition()[0]-0.3,a.Getposition()[1],-36]);
+			
+			
+			}
+			
+			
+		else if (a.Getposition()[2]>-53 && a.Getposition()[2]<-52 ){
+			if (prot.posizione()[0]>45)
+				a.Setposition([a.Getposition()[0]+0.3,a.Getposition()[1],-53]);
+			else
+				a.Setposition([a.Getposition()[0]-0.3,a.Getposition()[1],-53]);	
+					
+			}
+	} 		
+
+	if (a.Getposition()[2]>-53 && a.Getposition()[2]<-36){
+		if (a.Getposition()[0]>37 && a.Getposition()[0]<38 ){
+			if (prot.posizione()[0]>45)
+				a.Setposition([37 ,a.Getposition()[1],a.Getposition()[2]+0.3]);
+			else
+				a.Setposition([37 ,a.Getposition()[1],a.Getposition()[2]-0.3]);
+			
+			
+			}
+		else if (a.Getposition()[0]>52 && a.Getposition()[0]<53 ){
+			if (prot.posizione()[0]>45)
+				a.Setposition([53 ,a.Getposition()[1],a.Getposition()[2]+0.3]);
+			else
+				a.Setposition([53 ,a.Getposition()[1],a.Getposition()[2]-0.3]);	
+			
+			}
+																	}	
+
+    a.SetRotation(an,0,1,0);	//si orienta verso il protagonista dopo aver evitato gli ostacoli
+
+}
+
+
+
+function partitapersa(){
+	
+
+	if (listauccisi[7]==0){  // per far sentire il suono della spada una volta sola
+			s_spada.Play(false); 
+			listauccisi[7]=1; 
+	}
+	odfight.Stop();
+	odmort.Play(true);	
+	
+	
+	partenza = false;
+	odintro.Stop();	
+	ConsoleText(0.37,0.74,"La morte è giunta");	
+	ConsoleText(0.15,0.5,"Sei stato sconfitto! Non era così che la storia doveva proseguire.");
+	ConsoleText(0.37,0.24,"Vuoi riprovare ? ");
+	ConsoleText(0.34,0.21,"premi INVIO per ricominciare");
+	
+
+
+}
+function ricarica(){
+
+odmort.Stop();
+odfin.Stop();
+ partenza =true;
+ vasorotto=false;
+  
+ uc4=false;
+ uc5 =false;
+ uc6 =false;
+ uc7 =false;
+ accesoF=true;
+ accesoF4=true;
+ accesoF2=true;
+ accesoF3=true;
+ Luce.Enable();
+ Luce2.Enable();
+ Luce3.Enable();
+ Luce4.Enable();
+ for(var i = 0; i < len(listauccisi); i++) listauccisi[i]= 0;
+prociuccisi =0;
+o_proc.SetPosition([-66.0,0.0,-24.0]);
+o_proc.UnHide();
+o_proc2.SetPosition([-66.0,0.0,24.0]);
+o_proc2.UnHide();
+o_proc3.SetPosition([-66.0,0.0,0.0]);
+o_proc3.UnHide();
+o_proc4.SetPosition([0,0,90]);	
+o_proc5.SetPosition([0,0,-90]);	
+ 
+ tempomorto=0;
+ prot.posiziona([0,0,0]);
+ prot.ricaricaaa();
+ 
+ }
+ 
+function ombre(){
+	
+}
