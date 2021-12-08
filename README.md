@@ -1,10 +1,10 @@
 # Ulisse
 
-Exam Project about Odissey. Help Ulysses kill the Suitors!
+University Exam Project about Odissey. Help Ulysses kill the Suitors!
 
-assets and music not included
+Assets and music not included
 
-here some screenshot
+Here some screenshot
 
 
 
